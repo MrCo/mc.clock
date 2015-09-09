@@ -1,0 +1,7 @@
+/**
+ * 秒车-倒计时
+ * CodeBy:Mr.Co
+ * Date:15/9/8
+ */
+.mc-clock-time{ background:#323232; display:inline-block; width:18px; height:24px; line-height: 24px; color:#fff; text-align: center; border-radius:3px; font-size:12px; }
+.mc-clock-txt{ font-size: 12px; }
