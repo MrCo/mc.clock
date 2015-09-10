@@ -5,6 +5,9 @@
  */
 ;(function(win,$,undeinfed){
     'use struct';
+    if(!$){
+        throw new Error('错误：未找到jQuery类库，请先引用jQuery类库后再使用mc.clock.js');
+    }
 
     /*
      * 用于存储时间记录器对象队列,便于删除
@@ -27,14 +30,8 @@
         },args);
         this.OPTIONS.param = this.OPTIONS.nowTime_Client - this.OPTIONS.nowTime_Server;
         this.createTimeElement();
-
-        //如果之前已经开始过倒计时，需要先干掉
-        var _clockObjIndex = this.OPTIONS.element.attr('mc-clock-idx');
-        if(_clockObjIndex){
-            console.log(win.mcClockStore);
-            this.clearCountTime(win.mcClockStore[_clockObjIndex].OPTIONS.timer);
-        }
-    }
+        this.clearCountTime();
+    };
 
     /*
      * 时钟原生对象引用
@@ -55,7 +52,6 @@
             '<span data-time="ss"class="mc-clock-time">0</span>'
         ].join('');
         this.OPTIONS.element.html(_timeHtml);
-
         return this;
     }
 
@@ -77,7 +73,6 @@
         _el.children('span[data-time=hh]').text(_format(_h));
         _el.children('span[data-time=mm]').text(_format(_m));
         _el.children('span[data-time=ss]').text(_format(_s));
-
         return this;
     }
 
@@ -115,16 +110,19 @@
 
     /*
      * 清除计时对象
-     * @timer   object      时间计时对象
      **/
-    clock.fn.clearCountTime = function(timer){
-        clearTimeout(timer);
-
+    clock.fn.clearCountTime = function(){
+        //如果之前已经开始过倒计时，需要先干掉
+        var _clockObjIndex = this.OPTIONS.element.attr('mc-clock-idx');
+        if(_clockObjIndex){
+            var _clockObj = win.mcClockStore[_clockObjIndex];
+            if(_clockObj) {
+                clearTimeout(_clockObj.OPTIONS.timer);
+            }
+            //添加到倒计时队列
+            win.mcClockStore[_clockObjIndex] = this;
+        }
         return this;
-    }
-
-    if(!$){
-        throw new Error('错误：未找到jQuery类库，请先引用jQuery类库后再使用mc.clock.js');
     }
 
     /*
@@ -138,18 +136,22 @@
     $(function(){
         $('[mc-clock-id]').each(function(i){
             var _$this = $(this),
+                _endTime = _$this.attr('end-time'),
+                _serverTime = _$this.attr('server-time'),
                 _clock;
 
             //设置倒计时
-            _clock = new clock({
-                element:_$this,
-                //startTime:new Date(_$this.attr('start-time')),
-                endTime:new Date(_$this.attr('end-time')),
-                nowTime_Server:new Date(_$this.attr('server-time'))
-            }).startTime();
+            if(_endTime && _serverTime){
+                _clock = new clock({
+                    element:_$this,
+                    //startTime:new Date(_$this.attr('start-time')),
+                    endTime:new Date(_endTime),
+                    nowTime_Server:new Date(_serverTime)
+                }).startTime();
+            }
 
             //添加到倒计时队列
-            mcClockStore.push(_clock);
+            win.mcClockStore.push(_clock);
             //记录当前对象的队列索引
             _$this.attr('mc-clock-idx',i);
         });
